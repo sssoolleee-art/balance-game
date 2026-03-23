@@ -1,0 +1,25 @@
+{
+  "name": "minority-game",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@apps-in-toss/web-framework": "latest",
+    "@supabase/supabase-js": "^2.99.1",
+    "@toss/tds-mobile-ait": "^2.2.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.1",
+    "sharp": "^0.34.5",
+    "typescript": "^5.6.2",
+    "vite": "^6.0.0"
+  }
+}

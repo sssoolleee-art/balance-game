@@ -141,8 +141,7 @@ export default function App() {
       return `${myP < 50 ? '🦄' : '✅'} ${txt} (${myP}%)`;
     });
     const text = `${hook}\n\n나는 ${result.emoji} ${result.label}\n${lines.join('\n')}\n\n👇 밸런스게임`;
-    if (navigator.share) navigator.share({ title: '밸런스게임', text });
-    else navigator.clipboard.writeText(text).then(() => alert('복사됐어요!'));
+    navigator.clipboard.writeText(text).then(() => setShowCopied(true));
   }
 
   function shareQuestion(q: typeof questions[0], myChoice: Choice, myPct: number) {
@@ -152,8 +151,7 @@ export default function App() {
       ? `나 "${picked}" 골랐는데 이거 고른 사람이 ${myPct}%밖에 없대 😂 넌?`
       : `"${picked}" vs "${other}" — 넌 어느 쪽?`;
     const text = `${hook}\n\n👇 밸런스게임`;
-    if (navigator.share) navigator.share({ title: '밸런스게임', text });
-    else navigator.clipboard.writeText(text).then(() => alert('복사됐어요!'));
+    navigator.clipboard.writeText(text).then(() => setShowCopied(true));
   }
 
   // ── INTRO ──────────────────────────────────────────────────────────────────

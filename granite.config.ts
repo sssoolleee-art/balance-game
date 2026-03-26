@@ -3,9 +3,9 @@ import { defineConfig } from '@apps-in-toss/web-framework/config';
 export default defineConfig({
   appName: 'balancegame',
   brand: {
-    displayName: '마이너리티 게임',
+    displayName: '밸런스게임',
     primaryColor: '#E85D04',
-    icon: 'https://via.placeholder.com/128x128/E85D04/FFFFFF?text=L',
+    icon: 'https://raw.githubusercontent.com/sssoolleee-art/balance-game/main/public/icon.png',
   },
   web: {
     host: 'localhost',

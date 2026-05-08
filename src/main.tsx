@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom/client';
 import { TDSMobileProvider } from '@toss/tds-mobile';
 import App from './App';
 import './styles/index.css';
+import { initAds } from './utils/ads';
+
+initAds();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

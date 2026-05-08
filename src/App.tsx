@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { questions, getSeededPercent, CATEGORIES, type Category } from './data/questions';
 import { recordVote, fetchVotes, toPercent, type VoteRow } from './supabase';
+import { BannerAd, showInterstitialAd, isAdFree, restoreAdFree, buyAdFree } from './utils/ads';
 
 type Choice = 'A' | 'B' | null;
 type Phase  = 'intro' | 'playing' | 'result';
@@ -77,7 +78,14 @@ export default function App() {
   const [choice, setChoice]         = useState<Choice>(null);
   const [choices, setChoices]       = useState<Choice[]>([]);
   const [voteMap, setVoteMap]       = useState<Map<number, VoteRow>>(new Map());
+  const [showCopied, setShowCopied] = useState(false);
+  const [adFree, setAdFree]         = useState(false);
+  const [purchasing, setPurchasing] = useState(false);
   const animKey = useRef(0);
+
+  useEffect(() => {
+    restoreAdFree(() => setAdFree(true));
+  }, []);
 
   // 라운드 시작 시 실제 투표 수 fetch
   useEffect(() => {
@@ -108,10 +116,15 @@ export default function App() {
     setChoice(c);
   }, []);
 
-  function goNext() {
+  async function goNext() {
     const next = [...choices, choice];
-    if (step + 1 >= ROUND_SIZE) { setChoices(next); setPhase('result'); }
-    else { setStep(s => s + 1); setChoice(null); setChoices(next); }
+    if (step + 1 >= ROUND_SIZE) {
+      if (!isAdFree()) await showInterstitialAd();
+      setChoices(next);
+      setPhase('result');
+    } else {
+      setStep(s => s + 1); setChoice(null); setChoices(next);
+    }
   }
 
   function goBack() {
@@ -141,7 +154,7 @@ export default function App() {
       return `${myP < 50 ? '🦄' : '✅'} ${txt} (${myP}%)`;
     });
     const text = `${hook}\n\n나는 ${result.emoji} ${result.label}\n${lines.join('\n')}\n\n👇 밸런스게임`;
-    navigator.clipboard.writeText(text).then(() => setShowCopied(true));
+    navigator.clipboard.writeText(text).then(() => { setShowCopied(true); setTimeout(() => setShowCopied(false), 2000); });
   }
 
   function shareQuestion(q: typeof questions[0], myChoice: Choice, myPct: number) {
@@ -151,7 +164,7 @@ export default function App() {
       ? `나 "${picked}" 골랐는데 이거 고른 사람이 ${myPct}%밖에 없대 😂 넌?`
       : `"${picked}" vs "${other}" — 넌 어느 쪽?`;
     const text = `${hook}\n\n👇 밸런스게임`;
-    navigator.clipboard.writeText(text).then(() => setShowCopied(true));
+    navigator.clipboard.writeText(text).then(() => { setShowCopied(true); setTimeout(() => setShowCopied(false), 2000); });
   }
 
   // ── INTRO ──────────────────────────────────────────────────────────────────
@@ -205,6 +218,7 @@ export default function App() {
 
     return (
       <div style={s.result}>
+        {showCopied && <div style={s.toast}>복사됐어요 📋</div>}
         <div style={s.resultCard}>
           <div style={{ ...s.resultHero, background: result.color }}>
             <div style={s.resultHeroInner}>
@@ -246,6 +260,15 @@ export default function App() {
         <div style={s.resultFoot}>
           <button style={s.shareBtn} onClick={shareResult}>결과 공유하기</button>
           <button style={s.ghostBtn} onClick={() => startGame(null)}>전체 문제 다시 하기</button>
+          {!adFree && (
+            <button
+              onClick={() => { if (purchasing) return; setPurchasing(true); buyAdFree(() => setAdFree(true), () => setPurchasing(false)); }}
+              disabled={purchasing}
+              style={{ width: '100%', padding: '14px', fontSize: '14px', fontWeight: 700, color: '#7B2FBE', background: '#F3EEFF', border: 'none', borderRadius: '14px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.3px' }}
+            >
+              {purchasing ? '처리 중...' : '✨ ₩990에 광고 없이 즐기기'}
+            </button>
+          )}
           {otherCats.length > 0 && (
             <div style={s.catSuggest}>
               <p style={s.catSuggestLabel}>다른 카테고리 해보기</p>
@@ -260,6 +283,7 @@ export default function App() {
               </div>
             </div>
           )}
+          {!adFree && <BannerAd />}
         </div>
       </div>
     );
@@ -430,7 +454,8 @@ const s: Record<string, React.CSSProperties> = {
   rPct:        { fontSize: '12px', fontWeight: 700, display: 'block' },
   rRealBadge:  { fontSize: '10px', fontWeight: 700, color: '#00A878', display: 'block', marginTop: '1px' },
   resultWatermark: { textAlign: 'center' as const, fontSize: '12px', fontWeight: 700, color: '#ccc', letterSpacing: '1px', padding: '12px 0 16px' },
-  resultFoot:  { padding: '16px 16px 44px', display: 'flex', flexDirection: 'column', gap: '8px' },
+  resultFoot:  { padding: '16px 16px 16px', display: 'flex', flexDirection: 'column', gap: '8px' },
+  toast:       { position: 'fixed' as const, bottom: '32px', left: '50%', transform: 'translateX(-50%)', background: '#191f28', color: '#fff', padding: '12px 20px', borderRadius: '99px', fontSize: '14px', fontWeight: 500, zIndex: 1000 },
   shareBtn:    { width: '100%', padding: '17px', fontSize: '17px', fontWeight: 800, color: '#fff', background: '#111', border: 'none', borderRadius: '16px', letterSpacing: '-0.5px', cursor: 'pointer', fontFamily: 'inherit' },
   ghostBtn:    { width: '100%', padding: '12px', fontSize: '15px', fontWeight: 500, color: '#aaa', letterSpacing: '-0.3px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' },
   catSuggest:  { borderTop: '1px solid #EFEFEB', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' },

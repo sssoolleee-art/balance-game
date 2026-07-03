@@ -1,10 +1,13 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { questions, getSeededPercent, CATEGORIES, type Category } from './data/questions';
 import { recordVote, fetchVotes, toPercent, type VoteRow } from './supabase';
-import { openURL } from '@apps-in-toss/web-framework';
+import { openURL, eventLog, eventLog } from '@apps-in-toss/web-framework';
 import { BannerAd, showInterstitialAd, isAdFree, restoreAdFree, buyAdFree } from './utils/ads';
 // 미니앱 간 이동 (크로스 프로모션) — 토스 밖이면 무시
-const openMiniApp = (link: string) => { openURL(link).catch(() => {}); };
+const openMiniApp = (link: string) => {
+  try { void eventLog({ log_name: 'cross_promo_click', log_type: 'event', params: { to: link } }).catch(() => {}); } catch { /* ignore */ }
+  openURL(link).catch(() => {});
+};
 
 
 type Choice = 'A' | 'B' | null;

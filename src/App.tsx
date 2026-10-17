@@ -5,6 +5,7 @@ import { openURL, eventLog, graniteEvent, closeView } from '@apps-in-toss/web-fr
 import { BannerAd, showInterstitialAd, isAdFree, restoreAdFree, buyAdFree } from './utils/ads';
 import { logGrowth } from './utils/growth';
 import { markSuccess } from './utils/review';
+import { FeedbackButton } from './utils/feedback';
 // 미니앱 간 이동 (크로스 프로모션) — 토스 밖이면 무시
 const openMiniApp = (link: string) => {
   try { void eventLog({ log_name: 'cross_promo_click', log_type: 'event', params: { to: link } }).catch(() => {}); } catch { /* ignore */ }
@@ -319,6 +320,7 @@ export default function App() {
               </div>
             </div>
           )}
+          <FeedbackButton app="balancegame" />
           {!adFree && <BannerAd />}
         </div>
       </div>

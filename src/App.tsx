@@ -3,6 +3,7 @@ import { questions, getSeededPercent, CATEGORIES, type Category } from './data/q
 import { recordVote, fetchVotes, toPercent, type VoteRow } from './supabase';
 import { openURL, eventLog, graniteEvent, closeView } from '@apps-in-toss/web-framework';
 import { BannerAd, showInterstitialAd, isAdFree, restoreAdFree, buyAdFree } from './utils/ads';
+import { logGrowth } from './utils/growth';
 // 미니앱 간 이동 (크로스 프로모션) — 토스 밖이면 무시
 const openMiniApp = (link: string) => {
   try { void eventLog({ log_name: 'cross_promo_click', log_type: 'event', params: { to: link } }).catch(() => {}); } catch { /* ignore */ }
@@ -129,6 +130,7 @@ export default function App() {
       if (!isAdFree()) await showInterstitialAd();
       setChoices(next);
       setPhase('result');
+      logGrowth('round_complete');
     } else {
       setStep(s => s + 1); setChoice(null); setChoices(next);
     }

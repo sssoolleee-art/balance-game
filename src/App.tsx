@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { questions, getSeededPercent, CATEGORIES, type Category } from './data/questions';
 import { recordVote, fetchVotes, toPercent, type VoteRow } from './supabase';
-import { openURL, eventLog, eventLog } from '@apps-in-toss/web-framework';
+import { openURL, eventLog, graniteEvent, closeView } from '@apps-in-toss/web-framework';
 import { BannerAd, showInterstitialAd, isAdFree, restoreAdFree, buyAdFree } from './utils/ads';
 // 미니앱 간 이동 (크로스 프로모션) — 토스 밖이면 무시
 const openMiniApp = (link: string) => {
@@ -139,6 +139,24 @@ export default function App() {
     const prev = choices.slice(0, -1);
     setChoices(prev); setStep(s => s - 1); setChoice(choices[step - 1]);
   }
+
+  // 내비게이션 바 뒤로가기: 첫 화면이면 종료, 문제 중엔 이전 문제, 결과에선 첫 화면 (앱 자체 뒤로 버튼은 두지 않음)
+  const goBackRef = useRef(goBack);
+  goBackRef.current = goBack;
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  useEffect(() => {
+    try {
+      const cleanup = graniteEvent.addEventListener('backEvent', {
+        onEvent: () => {
+          if (phaseRef.current === 'intro') void closeView();
+          else if (phaseRef.current === 'playing') goBackRef.current();
+          else setPhase('intro');
+        },
+      });
+      return () => { cleanup?.(); };
+    } catch { return undefined; }
+  }, []);
 
   function shareResult() {
     const result = getResult(choices, round);
@@ -322,11 +340,6 @@ export default function App() {
   return (
     <div style={s.play}>
       <div style={s.nav}>
-        <button style={s.backBtn} onClick={goBack}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18l-6-6 6-6" stroke="#333" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
         <div style={s.track}>
           <div style={{ ...s.trackFill, width: `${(step / ROUND_SIZE) * 100}%`, background: cat.vivid }} />
         </div>
@@ -391,7 +404,7 @@ export default function App() {
             )}
             <div style={s.footBtns}>
               <button style={{ ...s.nextBtn, background: cat.vivid }} onClick={goNext}>
-                {step + 1 >= ROUND_SIZE ? '결과 보기' : '다음 문제'}
+                {step + 1 >= ROUND_SIZE ? (adFree ? '결과 보기' : '광고 보고 결과 보기') : '다음 문제'}
               </button>
               <button style={s.qShareBtn} onClick={() => shareQuestion(q, choice, myPct)}>
                 이 질문 공유
